@@ -2,7 +2,7 @@
 
 # Get the project name
 if [ -z "$1" ]; then
-  echo "Usage: $0 <project-name>"
+   echo "Usage: $0 <project-name>"
   exit 1
 fi
 
@@ -55,9 +55,9 @@ func Run() {
 echo "package main
 
 import (
-    \"project/pkg/config\"
-    \"project/pkg/db/repository\"
-    \"project/pkg/domain/services\"
+    \"${PROJECT_NAME}/pkg/config\"
+    \"${PROJECT_NAME}/pkg/db/repository\"
+    \"${PROJECT_NAME}/pkg/domain/services\"
 
     \"github.com/google/wire\"
 )
