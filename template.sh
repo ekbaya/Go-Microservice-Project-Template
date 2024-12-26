@@ -17,7 +17,7 @@ mkdir -p $SERVICE_NAME/pkg/domain/models
 mkdir -p $SERVICE_NAME/pkg/domain/services
 mkdir -p $SERVICE_NAME/pkg/utils
 mkdir -p $SERVICE_NAME/internal/app
-mkdir -p $SERVICE_NAME/internal/auth
+mkdir -p $SERVICE_NAME/internal/"$SERVICE_NAME"
 mkdir -p $SERVICE_NAME/internal/wire
 mkdir -p $SERVICE_NAME/proto
 mkdir -p $SERVICE_NAME/build
@@ -56,13 +56,19 @@ func InitializeApp() (*services.UserService, error) {
     )
     return &services.UserService{}, nil
 }" > $SERVICE_NAME/internal/wire/injector.go
+
 echo "# Protocol Buffers Folder
 # Place your .proto files here
 syntax = \"proto3\";
-package myproject;
-message Example {
-  string id = 1;
-}" > $SERVICE_NAME/proto/example.proto
+package $SERVICE_NAME;
+
+option go_package = "$SERVICE_NAME/proto";
+
+service ExampleService {
+    
+}" > $SERVICE_NAME/proto/$SERVICE_NAME.proto
+
+
 echo "# Dockerfile for Go service
 # Build stage
 FROM golang:1.22-alpine AS builder
@@ -79,8 +85,8 @@ COPY . .
 # Download dependencies
 RUN go mod download
 
-# Build the specific service (auth in this case)
-RUN CGO_ENABLED=0 GOOS=linux go build -o auth_service ./auth/cmd/main.go
+# Build the specific service ("$SERVICE_NAME" in this case)
+RUN CGO_ENABLED=0 GOOS=linux go build -o "$SERVICE_NAME"_service ./"$SERVICE_NAME"/cmd/main.go
 
 # Final stage
 FROM alpine:latest
@@ -91,46 +97,94 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 # Create config directory in the service path
-RUN mkdir -p /app/auth/pkg/config
+RUN mkdir -p /app/"$SERVICE_NAME"/pkg/config
 
 # Copy the binary from the builder stage
-COPY --from=builder /app/auth_service .
+COPY --from=builder /app/"$SERVICE_NAME"_service .
 
-# Copy the specific config file for auth service
-COPY --from=builder /app/auth/pkg/config/config.yaml /app/auth/pkg/config/
+# Copy the specific config file for "$SERVICE_NAME" service
+COPY --from=builder /app/"$SERVICE_NAME"/pkg/config/config.yaml /app/"$SERVICE_NAME"/pkg/config/
 
 # Copy the .env file from the build context (parent directory)
 COPY .env /app/.env
 
 # Set the environment variable to the config path
-ENV SERVICE_CONFIG_PATH=/app/auth/pkg/config
+ENV SERVICE_CONFIG_PATH=/app/"$SERVICE_NAME"/pkg/config
 
 # Expose HTTP and gRPC ports
-EXPOSE 8000
+EXPOSE 9001
 EXPOSE 50050
 
 # Run the service
-CMD [\"./auth_service\"]" > $SERVICE_NAME/build/Dockerfile
+CMD [\"./"$SERVICE_NAME"_service\"]" > $SERVICE_NAME/build/Dockerfile
+
+
 echo "# Kubernetes Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ${SERVICE_NAME}-deployment
+  name: "$SERVICE_NAME"-deployment
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: ${SERVICE_NAME}
+      app: "$SERVICE_NAME"
   template:
     metadata:
       labels:
-        app: ${SERVICE_NAME}
+        app: "$SERVICE_NAME"
     spec:
       containers:
-      - name: ${SERVICE_NAME}
-        image: 
-        ports:
-        - containerPort: 8080" > $SERVICE_NAME/k8s/deployment.yaml
+        - name: "$SERVICE_NAME"
+          image: <account_id>.dkr.ecr.<region>.amazonaws.com/"$SERVICE_NAME":<image_tag>
+          ports:
+            - containerPort: 9001
+            - containerPort: 50051
+          env:
+            - name: DB_HOST
+              value: postgres-service
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: password
+            - name: DB_NAME
+              value: "$SERVICE_NAME"
+            - name: DB_SSL_MODE
+              value: disable
+            - name: RABBITMQ_URL
+              value: "amqp://guest:guest@rabbitmq-service.default.svc.cluster.local:5672/"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/"$SERVICE_NAME"/pkg/config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: "$SERVICE_NAME"-config" > $SERVICE_NAME/k8s/deployment.yaml
+
+echo "# Kubernetes Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: "$SERVICE_NAME"-service
+spec:
+  selector:
+    app: "$SERVICE_NAME"
+  ports:
+    - name: http
+      port: 9001
+      targetPort: 9001
+    - name: grpc
+      port: 50051
+      targetPort: 50051" > $SERVICE_NAME/k8s/service.yaml
+
 echo "module $SERVICE_NAME
 go 1.20" > $SERVICE_NAME/go.mod
 
