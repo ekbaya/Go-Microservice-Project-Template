@@ -91,19 +91,19 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 # Create config directory in the service path
-RUN mkdir -p /app/auth/config
+RUN mkdir -p /app/auth/pkg/config
 
 # Copy the binary from the builder stage
 COPY --from=builder /app/auth_service .
 
 # Copy the specific config file for auth service
-COPY --from=builder /app/auth/config/config.yaml /app/auth/config/
+COPY --from=builder /app/auth/pkg/config/config.yaml /app/auth/pkg/config/
 
 # Copy the .env file from the build context (parent directory)
 COPY .env /app/.env
 
 # Set the environment variable to the config path
-ENV SERVICE_CONFIG_PATH=/app/auth/config
+ENV SERVICE_CONFIG_PATH=/app/auth/pkg/config
 
 # Expose HTTP and gRPC ports
 EXPOSE 8000
