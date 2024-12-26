@@ -1,10 +1,3 @@
-Here’s a comprehensive `README.md` that explains the generated project structure:
-
----
-
-### **README.md**
-
-```markdown
 # My Go Service
 
 This repository contains a scaffolded Go project with the following features:
@@ -51,9 +44,9 @@ my-go-service/
 │   ├── deployment.yaml
 ├── go.mod
 ├── README.md
-```
 
----
+
+```
 
 ### **Directory Breakdown**
 
@@ -161,11 +154,3 @@ kubectl apply -f k8s/
 Feel free to contribute by submitting issues or pull requests. Follow the project's coding standards and ensure all tests pass before submission.
 
 ---
-
-### **License**
-This project is licensed under the MIT License. See the `LICENSE` file for details.
-```
-
----
-
-This `README.md` provides a comprehensive overview of the structure, directory purpose, and usage instructions. Let me know if you'd like further refinements!
