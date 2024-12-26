@@ -9,7 +9,7 @@ fi
 PROJECT_NAME=$1
 
 # Create the directory structure
-mkdir -p $PROJECT_NAME/cmd/service-name
+mkdir -p $PROJECT_NAME/cmd
 mkdir -p $PROJECT_NAME/pkg/api/handlers
 mkdir -p $PROJECT_NAME/pkg/api/middleware
 mkdir -p $PROJECT_NAME/pkg/config
@@ -28,7 +28,7 @@ echo "package main
 
 func main() {
     println(\"Hello, World!\")
-}" > $PROJECT_NAME/cmd/service-name/main.go
+}" > $PROJECT_NAME/cmd/main.go
 
 echo "package handlers
 
@@ -42,11 +42,11 @@ type Config struct {
     AppName string
 }" > $PROJECT_NAME/pkg/config/config.go
 
-echo "package main
+echo "package app
 
 import \"fmt\"
 
-func main() {
+func Run() {
     fmt.Println(\"App started\")
 }" > $PROJECT_NAME/internal/app/app.go
 
