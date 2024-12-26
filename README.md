@@ -10,6 +10,42 @@ This repository contains a scaffolded Go project with the following features:
 
 ---
 
+## **Project Structure**
+
+```plaintext
+my-go-service/
+├── cmd/
+│   └── main.go
+├── pkg/
+│   ├── api/
+│   │   ├── handlers/
+│   │   │   └── health.go
+│   │   └── middleware/
+│   ├── config/
+│   │   └── config.go
+│   ├── db/
+│   │   ├── migrations/
+│   │   └── repository/
+│   ├── domain/
+│   │   ├── models/
+│   │   └── services/
+│   └── utils/
+├── internal/
+│   ├── app/
+│   │   └── app.go
+│   ├── auth/
+│   └── wire/
+│       └── injector.go
+├── proto/
+│   └── example.proto
+├── build/
+│   └── Dockerfile
+├── k8s/
+│   ├── deployment.yaml
+├── go.mod
+├── README.md
+
+```
 ## **Directory Breakdown**
 
 ### **1. `cmd/`**
