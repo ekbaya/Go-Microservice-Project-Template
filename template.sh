@@ -20,6 +20,8 @@ mkdir -p $PROJECT_NAME/pkg/domain/services
 mkdir -p $PROJECT_NAME/pkg/utils
 mkdir -p $PROJECT_NAME/internal/app
 mkdir -p $PROJECT_NAME/internal/auth
+mkdir -p $PROJECT_NAME/internal/wire
+mkdir -p $PROJECT_NAME/proto
 mkdir -p $PROJECT_NAME/build
 mkdir -p $PROJECT_NAME/k8s
 
@@ -49,6 +51,35 @@ import \"fmt\"
 func Run() {
     fmt.Println(\"App started\")
 }" > $PROJECT_NAME/internal/app/app.go
+
+echo "package main
+
+import (
+    \"project/pkg/config\"
+    \"project/pkg/db/repository\"
+    \"project/pkg/domain/services\"
+
+    \"github.com/google/wire\"
+)
+
+func InitializeApp() (*services.UserService, error) {
+    wire.Build(
+        config.NewConfig,
+        repository.NewUserRepository,
+        services.NewUserService,
+    )
+    return &services.UserService{}, nil
+}" > $PROJECT_NAME/internal/wire/injector.go
+
+echo "# Protocol Buffers Folder
+# Place your .proto files here
+syntax = \"proto3\";
+
+package myproject;
+
+message Example {
+  string id = 1;
+}" > $PROJECT_NAME/proto/example.proto
 
 echo "# Dockerfile for Go service
 FROM golang:1.20
@@ -84,6 +115,15 @@ go 1.20" > $PROJECT_NAME/go.mod
 
 # Add README.md
 echo "# $PROJECT_NAME
-This is a scaffolded Go project." > $PROJECT_NAME/README.md
+This is a scaffolded Go project with support for:
+- Protocol Buffers (.proto files)
+- Dependency injection using Google Wire
+- Kubernetes manifests
+- Docker setup
+
+## Getting Started
+1. Place your .proto files in the \`proto/\` directory.
+2. Use \`wire\` to generate the dependency injection code.
+3. Build and deploy the service." > $PROJECT_NAME/README.md
 
 echo "Project structure for $PROJECT_NAME created!"
